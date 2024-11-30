@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <NTPClient.h>
 #include <WiFi.h>
+#include <ESPmDNS.h>
 
 #include <HomeConfig.hpp>
 #include <HomeCredentials.hpp>
@@ -10,15 +11,16 @@
 
 class HomeNetworking {
  private:
-  bool connected = false;
-  unsigned long lastConnectionRetry = 0;
-  String ssid;
-  String password;
+  bool _connected = false;
+  unsigned long _lastConnectionRetry = 0;
+  String _ssid;
+  String _password;
+  String _hostname = HOME_DEVICE_DNS_NAME;
   HomeNetworking() = delete;
   // NTP
-  WiFiUDP ntpUDP;
-  NTPClient ntpClient = NTPClient(ntpUDP, HOME_NTP_TIME_OFFSET);
-  bool ntpConnected = false;
+  WiFiUDP _ntpUDP;
+  NTPClient _ntpClient = NTPClient(_ntpUDP, HOME_NTP_TIME_OFFSET);
+  bool _ntpConnected = false;
 
  public:
   HomeNetworking(String ssid = HOME_WIFI_SSID,

@@ -1,74 +1,81 @@
 #include <HomeNetworking.hpp>
 
 HomeNetworking::HomeNetworking(String ssid, String password) {
-  this->ssid = ssid;
-  this->password = password;
-  WiFi.begin(ssid.c_str(), password.c_str());
-  lastConnectionRetry = millis();
+  _ssid = ssid;
+  _password = password;
+  WiFi.begin(_ssid.c_str(), _password.c_str());
+
+  // setup mDNS
+  mdns_init();
+  mdns_hostname_set(_hostname.c_str());
+  mdns_instance_name_set(_hostname.c_str());
+
+  _lastConnectionRetry = millis();
 }
 
 void HomeNetworking::connect() {
-  if (millis() - lastConnectionRetry > HOME_NETWORK_CONNECTION_RETRY_DELAY_MS) {
+  if (millis() - _lastConnectionRetry >
+      HOME_NETWORK_CONNECTION_RETRY_DELAY_MS) {
     if (WiFi.status() != WL_CONNECTED) {
       DEBUG_PRINT(".");
-      WiFi.begin(ssid, password);
-      lastConnectionRetry = millis();
+      WiFi.begin(_ssid, _password);
+      _lastConnectionRetry = millis();
     } else {
-      connected = true;
+      _connected = true;
     }
   }
 }
 
 void HomeNetworking::disconnect() {
   WiFi.disconnect();
-  connected = false;
+  _connected = false;
 }
 
 bool HomeNetworking::checkConnection() {
   if (WiFi.status() == WL_CONNECTED) {
-    connected = true;
+    _connected = true;
   } else {
-    connected = false;
+    _connected = false;
   }
 
-  return connected;
+  return _connected;
 }
 
-bool HomeNetworking::isConnected() { return connected; }
+bool HomeNetworking::isConnected() { return _connected; }
 
 // NTP
 void HomeNetworking::ntpConnect() {
-  if (!ntpConnected && connected) {
-    ntpClient.begin();
-    ntpClient.setUpdateInterval(HOME_NTP_UPDATE_INTERVAL);
-    ntpConnected = true;
+  if (!_ntpConnected && _connected) {
+    _ntpClient.begin();
+    _ntpClient.setUpdateInterval(HOME_NTP_UPDATE_INTERVAL);
+    _ntpConnected = true;
   }
 }
 
 void HomeNetworking::ntpDisconnect() {
-  ntpClient.end();
-  ntpConnected = false;
+  _ntpClient.end();
+  _ntpConnected = false;
 }
 
 bool HomeNetworking::ntpCheckConnection() {
-  if (ntpClient.update()) {
-    ntpConnected = true;
+  if (_ntpClient.update()) {
+    _ntpConnected = true;
   } else {
-    ntpConnected = false;
+    _ntpConnected = false;
   }
 
-  return ntpConnected;
+  return _ntpConnected;
 }
 
-bool HomeNetworking::ntpIsConnected() { return ntpConnected; }
+bool HomeNetworking::ntpIsConnected() { return _ntpConnected; }
 
-void HomeNetworking::ntpUpdate() { ntpClient.update(); }
+void HomeNetworking::ntpUpdate() { _ntpClient.update(); }
 
 String HomeNetworking::ntpGetFormattedTime() {
-  return ntpClient.getFormattedTime();
+  return _ntpClient.getFormattedTime();
 }
 
 unsigned long HomeNetworking::ntpGetEpoch() {
-  ntpClient.forceUpdate();
-  return ntpClient.getEpochTime();
+  _ntpClient.forceUpdate();
+  return _ntpClient.getEpochTime();
 }

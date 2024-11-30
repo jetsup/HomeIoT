@@ -24,6 +24,7 @@ class HomeRTC {
   void setDateTime(DateTime dateTime);
   String getDate();
   String getTime();
+  unsigned long getEpoch();
   String getDayOfTheWeek();
   float getTemperature();
 };

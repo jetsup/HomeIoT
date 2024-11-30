@@ -22,3 +22,7 @@
 #define HOME_SCREEN_WIDTH 128
 #define HOME_SCREEN_HEIGHT 64
 #define HOME_OLED_RESET -1  // Reset pin # (or -1 if sharing Arduino reset pin)
+
+// Server
+#define HOME_SERVER_PORT 80
+#define HOME_SERVER_API_PATH "/api/v1"

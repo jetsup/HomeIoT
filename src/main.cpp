@@ -1,9 +1,13 @@
 #include <HomeMain.hpp>
 
+TaskHandle_t mainTaskHandle;
+TaskHandle_t monitorTaskHandle;
+
 HomeDHT dht(DHT_PIN);
 HomeRTC *rtc;
 HomeNetworking *networking;
 HomeDisplay *display;
+HomeServer *server;
 
 bool SET_DATE_TIME = false;
 
@@ -20,38 +24,24 @@ void setup() {
   networking =
       new HomeNetworking(String(HOME_WIFI_SSID), String(HOME_WIFI_PASSWORD));
 
+  server = new HomeServer(HOME_SERVER_PORT, &dht, rtc);
+
   if (SET_DATE_TIME) {
     while (!networking->isConnected()) {
       DEBUG_PRINT("#");
       networking->connect();
       delay(1000);
     }
-
     DEBUG_PRINTLN("Connected to WiFi");
 
     networking->ntpConnect();
     rtc->setDateTime(DateTime(networking->ntpGetEpoch()));
   }
+
+  xTaskCreatePinnedToCore(mainTaskLooper, "mainTask", 10000, NULL, 1,
+                          &mainTaskHandle, 1);
+  xTaskCreatePinnedToCore(monitorTaskLooper, "monitorTask", 10000, NULL, 1,
+                          &monitorTaskHandle, 0);
 }
 
-void loop() {
-  display->clear();
-  display->drawText(0, 0, "Date: ", 1);
-  display->drawText(40, 0, rtc->getDate().c_str(), 1);
-
-  display->drawText(0, 10, "Time: ", 1);
-  display->drawText(40, 10, rtc->getTime().c_str(), 1);
-
-  display->drawLine(0, 20, 128, 20, WHITE);
-
-  display->drawText(0, 25, "Temperature: ", 1);
-  display->drawText(
-      80, 25, String(String(dht.getTemperature(CELSIUS)) + "'").c_str(), 1);
-
-  display->drawText(0, 35, "Humidity: ", 1);
-  display->drawText(80, 35, String(String(dht.getHumidity()) + "%").c_str(), 1);
-
-  display->display();
-
-  delay(50);
-}
+void loop() {}

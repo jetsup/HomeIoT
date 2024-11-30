@@ -36,6 +36,16 @@ String HomeRTC::getTime() {
   return formatTime(now);
 }
 
+unsigned long HomeRTC::getEpoch() {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return 0;
+  }
+
+  DateTime now = rtc.now();
+  return now.unixtime();
+}
+
 String HomeRTC::getDayOfTheWeek() {
   if (!rtcModulePresent) {
     retryDetect();
