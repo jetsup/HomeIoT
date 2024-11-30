@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Wire.h>
 #include <RTClib.h>
+#include <Wire.h>
 #include <time.h>
 
 #define DEBUG true
