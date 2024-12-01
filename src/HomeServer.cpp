@@ -1,10 +1,8 @@
 #include <HomeServer.hpp>
 
-HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc) : AsyncWebServer(port) {
-  _port = port;
-  _dht = dht;
-    _rtc = rtc;
-
+HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
+                       HomeApplianceConfiguration *config)
+    : AsyncWebServer(port), _port(port), _dht(dht), _rtc(rtc), _config(config) {
   // Serve the root page
   on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     // request->send(LittleFS, "/index.html", "text/html");
@@ -22,6 +20,77 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc) : AsyncWebServ
        response->setLength();
        request->send(response);
      });
+
+  //  post request to add a device
+  on(
+      String(String(HOME_SERVER_API_PATH) + "/device-add/").c_str(), HTTP_POST,
+      [](AsyncWebServerRequest *request) {}, NULL,
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index, size_t total) {
+        ArduinoJson::JsonDocument doc;
+        ArduinoJson::DeserializationError error =
+            deserializeJson(doc, data, len);
+
+        DEBUG_PRINTF("Received JSON: ['%d']'%s'\n", len, data);
+
+        if (error) {
+          request->send(400, "application/json", "Invalid JSON Received");
+          return;
+        }
+
+        if (doc.containsKey(CONFIG_APPLIANCE_NAME) &&
+            doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL) &&
+            doc.containsKey(CONFIG_APPLIANCE_PIN)) {
+          String name = doc[CONFIG_APPLIANCE_NAME];
+          bool isDigital = doc[CONFIG_APPLIANCE_IS_DIGITAL];
+          uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
+
+          _config->addAppliance(name, isDigital, pin);
+          request->send(200, "application/json", "Device added");
+        } else {
+          request->send(400, "application/json", "Invalid JSON");
+        }
+      });
+
+  // post request to change the status of the device
+  on(
+      String(String(HOME_SERVER_API_PATH) + "/device-status/").c_str(),
+      HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index, size_t total) {
+        ArduinoJson::JsonDocument doc;
+        ArduinoJson::DeserializationError error =
+            deserializeJson(doc, data, len);
+
+        DEBUG_PRINTF("Received JSON: ['%d']'%s'\n", len, data);
+
+        if (error) {
+          request->send(400, "application/json", "Invalid JSON Received");
+          return;
+        }
+
+        if (doc.containsKey(CONFIG_APPLIANCE_PIN) &&
+            doc.containsKey(CONFIG_APPLIANCE_VALUE)) {
+          int value = doc[CONFIG_APPLIANCE_VALUE];
+          uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
+
+          DEBUG_PRINTF("Pin: '%d' -> '%d'\n", pin, value);
+
+          HomeAppliance *appliance = _config->getAppliance(pin);
+          DEBUG_PRINTF("Pin Key: %s\n", CONFIG_APPLIANCE_PIN);
+
+          if (appliance == nullptr) {
+            request->send(400, "application/json",
+                          "The appliance does not exist");
+          }
+
+          appliance->setValue(value);
+          _config->updateApplianceValue(pin, value);
+          request->send(200, "application/json", "Appliance Value Updated");
+        } else {
+          request->send(400, "application/json", "Invalid JSON");
+        }
+      });
 
   // Serve the CSS file
   //   on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {

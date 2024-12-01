@@ -26,3 +26,6 @@
 // Server
 #define HOME_SERVER_PORT 80
 #define HOME_SERVER_API_PATH "/api/v1"
+
+// File System
+#define HOME_APPLIANCES_FILE "/config/appliances.json"

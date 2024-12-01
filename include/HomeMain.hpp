@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include <HomeAppliance.hpp>
 #include <HomeConfig.hpp>
 #include <HomeDHT.hpp>
 #include <HomeDisplay.hpp>
@@ -18,6 +19,8 @@ extern HomeRTC *rtc;
 extern HomeNetworking *networking;
 extern HomeDisplay *display;
 extern HomeServer *server;
+extern HomeApplianceConfiguration *applianceConfig;
+extern std::vector<HomeAppliance *> appliances;
 
 extern bool SET_DATE_TIME;
 
@@ -34,3 +37,9 @@ void mainTaskLooper(void *parameter);
  * @param parameter void pointer to the parameter passed to the task
  */
 void monitorTaskLooper(void *parameter);
+
+/**
+ * @brief Initialize the file system and create all files if they are not
+ * present
+ */
+void initFileSystem();

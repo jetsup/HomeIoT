@@ -7,8 +7,9 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 
-#include <HomeConfig.hpp>
 #include <Home.hpp>
+#include <HomeAppliance.hpp>
+#include <HomeConfig.hpp>
 #include <HomeDHT.hpp>
 #include <HomeRTC.hpp>
 
@@ -17,7 +18,9 @@ class HomeServer : public AsyncWebServer {
   uint16_t _port;
   HomeDHT *_dht;
   HomeRTC *_rtc;
+  HomeApplianceConfiguration *_config;
 
  public:
-  HomeServer(uint16_t port /* = 80*/, HomeDHT *dht, HomeRTC *rtc);
+  HomeServer(uint16_t port /* = 80*/, HomeDHT *dht, HomeRTC *rtc,
+             HomeApplianceConfiguration *config);
 };

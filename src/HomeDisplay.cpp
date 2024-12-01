@@ -14,7 +14,7 @@ void HomeDisplay::begin() {
   }
   // TODO: replace adafruit logo with custom logo
   screen->display();
-  delay(200);  // Pause for 2 seconds
+  delay(1000);  // Pause for 1 seconds
   screen->clearDisplay();
 }
 
