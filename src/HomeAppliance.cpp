@@ -226,3 +226,7 @@ unsigned int HomeApplianceConfiguration::printConfiguration() {
 
   return 0;
 }
+
+DynamicJsonDocument* HomeApplianceConfiguration::getJsonConfig(){
+    return _config;
+}

@@ -9,7 +9,8 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
     request->send(200, "text/plain", "Hello, world");
   });
 
-  on(String(String(HOME_SERVER_API_PATH) + "/").c_str(), HTTP_GET,
+  // get the system devices being monitored
+  on(String(String(HOME_SERVER_API_PATH) + "/stats/").c_str(), HTTP_GET,
      [this](AsyncWebServerRequest *request) {
        // send a JSON response
        AsyncJsonResponse *response = new AsyncJsonResponse();
@@ -17,13 +18,38 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
        apiGetTemperature(_dht, CELSIUS, root);
        apiGetHumidity(_dht, root);
        apiGetTime(DateTime(_rtc->getEpoch()), root);
+       apiAddApplianceData(_config, root, false);
+       response->setLength();
+       request->send(response);
+     });
+
+  // get all devices connected in the system
+  on(String(String(HOME_SERVER_API_PATH) + "/devices/").c_str(), HTTP_GET,
+     [this](AsyncWebServerRequest *request) {
+       AsyncJsonResponse *response = new AsyncJsonResponse();
+       JsonObject root = response->getRoot();
+
+       apiAddApplianceData(_config, root, false);
+
+       response->setLength();
+       request->send(response);
+     });
+
+  // get all devices flagged as deleted
+  on(String(String(HOME_SERVER_API_PATH) + "/devices/deleted/").c_str(), HTTP_GET,
+     [this](AsyncWebServerRequest *request) {
+       AsyncJsonResponse *response = new AsyncJsonResponse();
+       JsonObject root = response->getRoot();
+
+       apiAddApplianceData(_config, root, true);
+
        response->setLength();
        request->send(response);
      });
 
   //  post request to add a device
   on(
-      String(String(HOME_SERVER_API_PATH) + "/device-add/").c_str(), HTTP_POST,
+      String(String(HOME_SERVER_API_PATH) + "/device/add/").c_str(), HTTP_POST,
       [](AsyncWebServerRequest *request) {}, NULL,
       [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
              size_t index, size_t total) {
@@ -37,6 +63,9 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           request->send(400, "application/json", "Invalid JSON Received");
           return;
         }
+
+        DEBUG_PRINTF("KEY THERE: %d\n",
+                     doc[CONFIG_APPLIANCE_NAME].is<String>());
 
         if (doc.containsKey(CONFIG_APPLIANCE_NAME) &&
             doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL) &&
@@ -52,9 +81,9 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
         }
       });
 
-  // post request to change the status of the device
+  // post request to change the value of the device
   on(
-      String(String(HOME_SERVER_API_PATH) + "/device-status/").c_str(),
+      String(String(HOME_SERVER_API_PATH) + "/devices/value/").c_str(),
       HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
       [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
              size_t index, size_t total) {

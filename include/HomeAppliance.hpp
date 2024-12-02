@@ -133,4 +133,5 @@ class HomeApplianceConfiguration {
   void updateApplianceName(uint8_t pin, String name);
   void saveConfiguration();
   unsigned int printConfiguration();
+  DynamicJsonDocument* getJsonConfig();
 };

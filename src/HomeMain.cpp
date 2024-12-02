@@ -44,7 +44,7 @@ void updateDisplay(HomeDisplay *display, uint8_t updateInterval = 100) {
   if (WiFi.status() == WL_CONNECTED) {
     display->drawText(20, 55, String(WiFi.localIP().toString()).c_str(), 1);
   } else {
-    display->drawText(30, 55, "WiFi Disconnected", 1);
+    display->drawText(15, 55, "WiFi Disconnected", 1);
   }
 
   display->display();
