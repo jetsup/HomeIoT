@@ -14,6 +14,7 @@ class HomeDisplay {
  public:
   HomeDisplay(TwoWire *wire);
   ~HomeDisplay();
+
   void begin();
   void clear();
   void display();

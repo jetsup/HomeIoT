@@ -1,6 +1,6 @@
 #include <HomeMain.hpp>
 
-const uint8_t _updateInterval = 50;
+const uint8_t _updateInterval = 1;
 unsigned long lastDisplayUpdate = 0;
 
 // ===================== Utility Functions Prototypes =====================
@@ -40,6 +40,12 @@ void updateDisplay(HomeDisplay *display, uint8_t updateInterval = 100) {
 
   display->drawText(0, 35, "Humidity: ", 1);
   display->drawText(80, 35, String(String(dht.getHumidity()) + "%").c_str(), 1);
+
+  if (WiFi.status() == WL_CONNECTED) {
+    display->drawText(20, 55, String(WiFi.localIP().toString()).c_str(), 1);
+  } else {
+    display->drawText(30, 55, "WiFi Disconnected", 1);
+  }
 
   display->display();
 
