@@ -9,6 +9,16 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
     request->send(200, "text/plain", "Hello, world");
   });
 
+  // ping request, returns 200
+  on(String(String(HOME_SERVER_API_PATH) + "/ping/").c_str(), HTTP_GET,
+     [](AsyncWebServerRequest *request) {
+       AsyncJsonResponse *response = new AsyncJsonResponse();
+       JsonObject root = response->getRoot();
+       root["status"] = "ok";
+       response->setLength();
+       request->send(response);
+     });
+
   // get the system devices being monitored
   on(String(String(HOME_SERVER_API_PATH) + "/stats/").c_str(), HTTP_GET,
      [this](AsyncWebServerRequest *request) {
@@ -36,8 +46,8 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
      });
 
   // get all devices flagged as deleted
-  on(String(String(HOME_SERVER_API_PATH) + "/devices/deleted/").c_str(), HTTP_GET,
-     [this](AsyncWebServerRequest *request) {
+  on(String(String(HOME_SERVER_API_PATH) + "/devices/deleted/").c_str(),
+     HTTP_GET, [this](AsyncWebServerRequest *request) {
        AsyncJsonResponse *response = new AsyncJsonResponse();
        JsonObject root = response->getRoot();
 
