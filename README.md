@@ -74,6 +74,10 @@ This project is a simple home automation system with a lot of flexibility. The s
 2. Open a browser and navigate to the DNS name you provided in the `HomeCredentials.hpp` file.
 3. You should now see the webserver where you can control the devices.
 
+## Resources
+
+-   To convert the image to a byte array I used the [image2cpp](https://javl.github.io/image2cpp/) tool.
+
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

@@ -7,6 +7,8 @@
 #include <HomeConfig.hpp>
 #include <HomeUtils.hpp>
 
+extern const unsigned char gear_logo[] PROGMEM;
+
 class HomeDisplay {
  private:
   Adafruit_SSD1306 *screen;
