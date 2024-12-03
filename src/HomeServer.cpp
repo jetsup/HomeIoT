@@ -74,9 +74,6 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           return;
         }
 
-        DEBUG_PRINTF("KEY THERE: %d\n",
-                     doc[CONFIG_APPLIANCE_NAME].is<String>());
-
         if (doc.containsKey(CONFIG_APPLIANCE_NAME) &&
             doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL) &&
             doc.containsKey(CONFIG_APPLIANCE_PIN)) {
@@ -116,11 +113,12 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           DEBUG_PRINTF("Pin: '%d' -> '%d'\n", pin, value);
 
           HomeAppliance *appliance = _config->getAppliance(pin);
-          DEBUG_PRINTF("Pin Key: %s\n", CONFIG_APPLIANCE_PIN);
 
           if (appliance == nullptr) {
             request->send(400, "application/json",
                           "The appliance does not exist");
+            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+            return;
           }
 
           appliance->setValue(value);

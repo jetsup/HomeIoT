@@ -129,7 +129,7 @@ void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
 void HomeApplianceConfiguration::deleteAppliance(uint8_t pin) {
   JsonArray appliances = _config->as<JsonArray>();
   for (JsonObject appliance : appliances) {
-    if (appliance[CONFIG_APPLIANCE_PIN] == pin) {
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       appliance[CONFIG_APPLIANCE_IS_DELETED] = 1;
       saveConfiguration();
       return;
@@ -144,15 +144,15 @@ std::vector<HomeAppliance *> HomeApplianceConfiguration::getAppliances() {
   JsonArray appliancesArray = _config->as<JsonArray>();
 
   for (JsonObject appliance : appliancesArray) {
-    if (appliance[CONFIG_APPLIANCE_IS_DELETED] == 0) {
-      if (appliance[CONFIG_APPLIANCE_IS_DIGITAL] == 1) {
-        appliances.push_back(new DigitalAppliance(
-            static_cast<uint8_t>(appliance[CONFIG_APPLIANCE_PIN]),
-            static_cast<int>(appliance[CONFIG_APPLIANCE_VALUE])));
+    if (!appliance[CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
+      if (appliance[CONFIG_APPLIANCE_IS_DIGITAL].as<bool>()) {
+        appliances.push_back(
+            new DigitalAppliance(appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>(),
+                                 appliance[CONFIG_APPLIANCE_VALUE].as<int>()));
       } else {
-        appliances.push_back(new AnalogAppliance(
-            static_cast<uint8_t>(appliance[CONFIG_APPLIANCE_PIN]),
-            static_cast<int>(appliance[CONFIG_APPLIANCE_VALUE])));
+        appliances.push_back(
+            new AnalogAppliance(appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>(),
+                                appliance[CONFIG_APPLIANCE_VALUE].as<int>()));
       }
     }
   }
@@ -164,12 +164,9 @@ HomeAppliance *HomeApplianceConfiguration::getAppliance(uint8_t pin) {
   JsonArray appliances = _config->as<JsonArray>();
 
   for (JsonObject appliance : appliances) {
-    serializeJsonPretty(appliance, Serial);
-
-    if (appliance[CONFIG_APPLIANCE_PIN] == pin) {
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       for (HomeAppliance *app : *_appliances) {
         if (app->getPin() == pin) {
-          DEBUG_PRINTF("Found appliance with pin %d\n", pin);
           return app;
         }
       }
@@ -184,7 +181,7 @@ HomeAppliance *HomeApplianceConfiguration::getAppliance(uint8_t pin) {
 void HomeApplianceConfiguration::updateApplianceValue(uint8_t pin, int value) {
   JsonArray appliances = _config->as<JsonArray>();
   for (JsonObject appliance : appliances) {
-    if (appliance[CONFIG_APPLIANCE_PIN] == pin) {
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       appliance[CONFIG_APPLIANCE_VALUE] = value;
       saveConfiguration();
       DEBUG_PRINTF("Appliance[%d] value updated to %d\n", pin, value);
@@ -198,7 +195,7 @@ void HomeApplianceConfiguration::updateApplianceValue(uint8_t pin, int value) {
 void HomeApplianceConfiguration::updateApplianceName(uint8_t pin, String name) {
   JsonArray appliances = _config->as<JsonArray>();
   for (JsonObject appliance : appliances) {
-    if (appliance[CONFIG_APPLIANCE_PIN] == pin) {
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       appliance[CONFIG_APPLIANCE_NAME] = name;
       saveConfiguration();
       return;
@@ -227,6 +224,6 @@ unsigned int HomeApplianceConfiguration::printConfiguration() {
   return 0;
 }
 
-DynamicJsonDocument* HomeApplianceConfiguration::getJsonConfig(){
-    return _config;
+DynamicJsonDocument *HomeApplianceConfiguration::getJsonConfig() {
+  return _config;
 }
