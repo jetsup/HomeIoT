@@ -41,5 +41,6 @@ void monitorTaskLooper(void *parameter);
 /**
  * @brief Initialize the file system and create all files if they are not
  * present
+ * @param formatFS boolean flag to format the file system during initialization
  */
-void initFileSystem();
+void initFileSystem(bool formatFS=false);

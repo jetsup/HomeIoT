@@ -53,13 +53,17 @@ void updateDisplay(HomeDisplay *display, uint8_t updateInterval = 100) {
 }
 
 // ========================== Utility Functions ==========================
-void initFileSystem() {
+void initFileSystem(bool formatFS) {
   if (!LittleFS.begin()) {
     DEBUG_PRINTLN("Failed to mount file system");
     return;
   }
 
   // Appliance Configuration File
+  if (formatFS && LittleFS.exists(HOME_APPLIANCES_FILE)) {
+    LittleFS.remove(HOME_APPLIANCES_FILE);
+  }
+  
   if (!LittleFS.exists(HOME_APPLIANCES_FILE)) {
     File file = LittleFS.open(HOME_APPLIANCES_FILE, "w", true);
     if (!file) {

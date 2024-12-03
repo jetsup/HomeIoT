@@ -12,12 +12,13 @@ HomeApplianceConfiguration *applianceConfig;
 std::vector<HomeAppliance *> appliances;
 
 bool SET_DATE_TIME = false;
+bool FORMAT_FILE_SYSTEM = false;
 
 void setup() {
   Serial.begin(115200);
 
   // Mount the file system
-  initFileSystem();
+  initFileSystem(FORMAT_FILE_SYSTEM);
 
   Wire.begin(I2C_SDA, I2C_SCL);
 
