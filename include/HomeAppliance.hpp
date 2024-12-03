@@ -80,9 +80,12 @@ class AnalogAppliance : public HomeAppliance {
 extern const char* CONFIG_APPLIANCE_NAME;
 extern const char* CONFIG_APPLIANCE_IS_DIGITAL;
 extern const char* CONFIG_APPLIANCE_PIN;
+extern const char* CONFIG_APPLIANCE_OLD_PIN;
 extern const char* CONFIG_APPLIANCE_VALUE;
 extern const char* CONFIG_APPLIANCE_IS_DELETED;
 extern const char* CONFIG_APPLIANCE_CREATED_AT;
+extern const char* CONFIG_APPLIANCE_UPDATED_AT;
+extern const char* CONFIG_APPLIANCE_RESET;
 
 class HomeApplianceConfiguration {
   // File format
@@ -127,10 +130,20 @@ class HomeApplianceConfiguration {
   void readConfiguration();
   void addAppliance(String name, bool isDigital, uint8_t pin, int value = 0);
   void deleteAppliance(uint8_t pin);
+
+  /**
+   * @brief Delete all appliances
+   * @note `This will delete all appliances from the configuration. Should be
+   called with caution`
+
+   */
+  void reset();
   std::vector<HomeAppliance*> getAppliances();
   HomeAppliance* getAppliance(uint8_t pin);
+  void updateAppliance(uint8_t oldPin, uint8_t newPin, String name, int value,
+                       bool isDigital);
+  void updateAppliance(uint8_t pin, String name, int value, bool isDigital);
   void updateApplianceValue(uint8_t pin, int value);
-  void updateApplianceName(uint8_t pin, String name);
   void saveConfiguration();
   unsigned int printConfiguration();
   DynamicJsonDocument* getJsonConfig();

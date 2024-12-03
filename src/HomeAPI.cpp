@@ -27,16 +27,11 @@ void apiAddApplianceData(HomeApplianceConfiguration *config, JsonObject root,
   JsonArray appliances = root.createNestedArray("appliances");
   JsonArray storedAppliancesJson = config->getJsonConfig()->as<JsonArray>();
 
-  for (JsonObject applianceJson : storedAppliancesJson) {
-    if (addDeleted) {
-      if (applianceJson[CONFIG_APPLIANCE_IS_DELETED] == 1) {
-        appliances.add(applianceJson);
-      }
-      continue;
+  for (JsonDocument applianceJson : storedAppliancesJson) {
+    if (applianceJson[CONFIG_APPLIANCE_IS_DELETED].as<bool>() == addDeleted) {
+      applianceJson.remove(CONFIG_APPLIANCE_IS_DELETED);
+      applianceJson.remove(CONFIG_APPLIANCE_CREATED_AT);
+      appliances.add(applianceJson);
     }
-
-    applianceJson.remove(CONFIG_APPLIANCE_IS_DELETED);
-    applianceJson.remove(CONFIG_APPLIANCE_CREATED_AT);
-    appliances.add(applianceJson);
   }
 }

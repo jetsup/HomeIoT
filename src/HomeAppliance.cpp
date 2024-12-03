@@ -3,9 +3,12 @@
 const char *CONFIG_APPLIANCE_NAME = "name";
 const char *CONFIG_APPLIANCE_IS_DIGITAL = "is_digital";
 const char *CONFIG_APPLIANCE_PIN = "pin";
+const char *CONFIG_APPLIANCE_OLD_PIN = "old_pin";
 const char *CONFIG_APPLIANCE_VALUE = "value";
 const char *CONFIG_APPLIANCE_IS_DELETED = "is_deleted";
 const char *CONFIG_APPLIANCE_CREATED_AT = "created_at";
+const char *CONFIG_APPLIANCE_UPDATED_AT = "updated_at";
+const char *CONFIG_APPLIANCE_RESET = "reset";
 
 // ============================ HomeAppliance ============================
 HomeAppliance::HomeAppliance(uint8_t pin, int value, bool isDigital)
@@ -115,6 +118,8 @@ void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
   appliance[CONFIG_APPLIANCE_IS_DELETED] = 0;
   appliance[CONFIG_APPLIANCE_CREATED_AT] =
       _rtc->getDate() + " " + _rtc->getTime();
+  appliance[CONFIG_APPLIANCE_UPDATED_AT] =
+      _rtc->getDate() + " " + _rtc->getTime();
 
   saveConfiguration();
 
@@ -129,7 +134,10 @@ void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
 void HomeApplianceConfiguration::deleteAppliance(uint8_t pin) {
   JsonArray appliances = _config->as<JsonArray>();
   for (JsonObject appliance : appliances) {
-    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
+    DEBUG_PRINTF("Deleting appliance with pin: %d::%d\n", pin,
+                 appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin);
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
+        !appliance[CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
       appliance[CONFIG_APPLIANCE_IS_DELETED] = 1;
       saveConfiguration();
       return;
@@ -137,6 +145,23 @@ void HomeApplianceConfiguration::deleteAppliance(uint8_t pin) {
   }
 
   DEBUG_PRINTLN("Appliance not found");
+}
+
+void HomeApplianceConfiguration::reset() {
+  // delete the config json file and recreate it
+  if (LittleFS.exists(HOME_APPLIANCES_FILE)) {
+    LittleFS.remove(HOME_APPLIANCES_FILE);
+  }
+
+  File file = LittleFS.open(HOME_APPLIANCES_FILE, "w", true);
+  if (!file) {
+    DEBUG_PRINTLN("Failed to create file");
+    return;
+  }
+
+  _config = new DynamicJsonDocument(1024);
+  saveConfiguration();
+  _appliances->clear();
 }
 
 std::vector<HomeAppliance *> HomeApplianceConfiguration::getAppliances() {
@@ -192,17 +217,40 @@ void HomeApplianceConfiguration::updateApplianceValue(uint8_t pin, int value) {
   DEBUG_PRINTLN("Appliance not found");
 }
 
-void HomeApplianceConfiguration::updateApplianceName(uint8_t pin, String name) {
+void HomeApplianceConfiguration::updateAppliance(uint8_t oldPin, uint8_t newPin,
+                                                 String name, int value,
+                                                 bool isDigital) {
   JsonArray appliances = _config->as<JsonArray>();
+
+  for (JsonObject appliance : appliances) {
+    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == oldPin) {
+      deleteAppliance(oldPin);
+      break;
+    }
+  }
+
+  addAppliance(name, isDigital, newPin, value);
+
+  DEBUG_PRINTLN("Appliance updated!");
+}
+
+void HomeApplianceConfiguration::updateAppliance(uint8_t pin, String name,
+                                                 int value, bool isDigital) {
+  JsonArray appliances = _config->as<JsonArray>();
+
   for (JsonObject appliance : appliances) {
     if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       appliance[CONFIG_APPLIANCE_NAME] = name;
+      appliance[CONFIG_APPLIANCE_VALUE] = value;
+      appliance[CONFIG_APPLIANCE_IS_DIGITAL] = isDigital;
       saveConfiguration();
+
+      DEBUG_PRINTLN("Appliance updated!");
       return;
     }
   }
 
-  DEBUG_PRINTLN("Appliance not found");
+  DEBUG_PRINTLN("Appliance Not Found");
 }
 
 void HomeApplianceConfiguration::saveConfiguration() {
