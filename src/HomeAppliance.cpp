@@ -9,6 +9,7 @@ const char *CONFIG_APPLIANCE_IS_DELETED = "is_deleted";
 const char *CONFIG_APPLIANCE_CREATED_AT = "created_at";
 const char *CONFIG_APPLIANCE_UPDATED_AT = "updated_at";
 const char *CONFIG_APPLIANCE_RESET = "reset";
+const char *CONFIG_APPLIANCE_DELETE_PERMANENT = "delete_permanent";
 
 // ============================ HomeAppliance ============================
 HomeAppliance::HomeAppliance(uint8_t pin, int value, bool isDigital)
@@ -131,16 +132,24 @@ void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
   }
 }
 
-void HomeApplianceConfiguration::deleteAppliance(uint8_t pin) {
+void HomeApplianceConfiguration::deleteAppliance(uint8_t pin, bool permanent) {
   JsonArray appliances = _config->as<JsonArray>();
-  for (JsonObject appliance : appliances) {
-    DEBUG_PRINTF("Deleting appliance with pin: %d::%d\n", pin,
-                 appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin);
-    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
-        !appliance[CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
-      appliance[CONFIG_APPLIANCE_IS_DELETED] = 1;
-      saveConfiguration();
-      return;
+
+  for (int i = 0; i < appliances.size(); i++) {
+    if (permanent) {
+      if (appliances[i][CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
+          appliances[i][CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
+        appliances.remove(i);
+        saveConfiguration();
+        return;
+      }
+    } else {
+      if (appliances[i][CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
+          !appliances[i][CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
+        appliances[i][CONFIG_APPLIANCE_IS_DELETED] = 1;
+        saveConfiguration();
+        return;
+      }
     }
   }
 
@@ -215,23 +224,6 @@ void HomeApplianceConfiguration::updateApplianceValue(uint8_t pin, int value) {
   }
 
   DEBUG_PRINTLN("Appliance not found");
-}
-
-void HomeApplianceConfiguration::updateAppliance(uint8_t oldPin, uint8_t newPin,
-                                                 String name, int value,
-                                                 bool isDigital) {
-  JsonArray appliances = _config->as<JsonArray>();
-
-  for (JsonObject appliance : appliances) {
-    if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == oldPin) {
-      deleteAppliance(oldPin);
-      break;
-    }
-  }
-
-  addAppliance(name, isDigital, newPin, value);
-
-  DEBUG_PRINTLN("Appliance updated!");
 }
 
 void HomeApplianceConfiguration::updateAppliance(uint8_t pin, String name,

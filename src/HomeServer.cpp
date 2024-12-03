@@ -76,7 +76,7 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
 
         if (doc.containsKey(CONFIG_APPLIANCE_RESET)) {
           _config->reset();
-          
+
           DEBUG_PRINTLN("All Appliances Deleted");
           request->send(200, "application/json", "All Appliances Deleted");
         } else {
@@ -221,27 +221,22 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
         }
 
         if (doc.containsKey(CONFIG_APPLIANCE_PIN) &&
-            doc.containsKey(CONFIG_APPLIANCE_OLD_PIN) &&
             (doc.containsKey(CONFIG_APPLIANCE_NAME) &&
              doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL))) {
-          uint8_t oldPin = doc[CONFIG_APPLIANCE_OLD_PIN];
-          uint8_t newPin = doc[CONFIG_APPLIANCE_PIN];
+          uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
           String name = doc[CONFIG_APPLIANCE_NAME];
           int value = doc[CONFIG_APPLIANCE_VALUE];
           bool isDigital = doc[CONFIG_APPLIANCE_IS_DIGITAL];
-          HomeAppliance *appliance = _config->getAppliance(oldPin);
+          HomeAppliance *appliance = _config->getAppliance(pin);
 
           if (appliance == nullptr) {
             request->send(400, "application/json",
                           "The appliance does not exist");
-            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", oldPin);
+            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
             return;
           }
-          if (newPin != oldPin) {
-            _config->updateAppliance(oldPin, newPin, name, value, isDigital);
-          } else {
-            _config->updateAppliance(oldPin, name, value, isDigital);
-          }
+
+          _config->updateAppliance(pin, name, value, isDigital);
 
           request->send(200, "application/json", "Appliance Updated");
         } else {
@@ -267,18 +262,26 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           return;
         }
 
+        bool deletePermanent = false;
+        if (doc.containsKey(CONFIG_APPLIANCE_DELETE_PERMANENT)) {
+          deletePermanent = true;
+        }
+
         if (doc.containsKey(CONFIG_APPLIANCE_PIN)) {
           uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
-          HomeAppliance *appliance = _config->getAppliance(pin);
 
-          if (appliance == nullptr) {
-            request->send(400, "application/json",
-                          "The appliance does not exist");
-            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
-            return;
+          if (!deletePermanent) {
+            HomeAppliance *appliance = _config->getAppliance(pin);
+
+            if (appliance == nullptr) {
+              request->send(400, "application/json",
+                            "The appliance does not exist");
+              DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+              return;
+            }
           }
 
-          _config->deleteAppliance(pin);
+          _config->deleteAppliance(pin, deletePermanent);
           request->send(200, "application/json", "Appliance Deleted");
         } else {
           DEBUG_PRINTLN("There is no appliance with that pin");
