@@ -64,3 +64,66 @@ float HomeRTC::getTemperature() {
 
   return rtc.getTemperature();
 }
+
+bool HomeRTC::setAlarm1(DateTime &alarmTime, Ds3231Alarm1Mode alarmMode) {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return false;
+  }
+
+  return rtc.setAlarm1(alarmTime, alarmMode);
+}
+
+DateTime HomeRTC::getAlarm1() {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return DateTime();
+  }
+
+  return rtc.getAlarm1();
+}
+
+bool HomeRTC::setAlarm2(DateTime &alarmTime, Ds3231Alarm2Mode alarmMode) {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return false;
+  }
+
+  return rtc.setAlarm2(alarmTime, alarmMode);
+}
+
+DateTime HomeRTC::getAlarm2() {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return DateTime();
+  }
+
+  return rtc.getAlarm2();
+}
+
+void HomeRTC::clearAlarm(uint8_t alarmNum) {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return;
+  }
+
+  rtc.clearAlarm(alarmNum);
+}
+
+void HomeRTC::disableAlarm(uint8_t alarmNum) {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return;
+  }
+
+  rtc.disableAlarm(alarmNum);
+}
+
+bool HomeRTC::alarmFired(uint8_t alarmNum) {
+  if (!rtcModulePresent) {
+    retryDetect();
+    return false;
+  }
+
+  return rtc.alarmFired(alarmNum);
+}

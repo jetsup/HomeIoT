@@ -78,6 +78,7 @@ class AnalogAppliance : public HomeAppliance {
 
 // ============================ Home Configuration ============================
 extern const char* CONFIG_APPLIANCE_NAME;
+extern const char* CONFIG_APPLIANCE_CATEGORY;
 extern const char* CONFIG_APPLIANCE_IS_DIGITAL;
 extern const char* CONFIG_APPLIANCE_PIN;
 extern const char* CONFIG_APPLIANCE_OLD_PIN;
@@ -129,8 +130,10 @@ class HomeApplianceConfiguration {
   ~HomeApplianceConfiguration();
 
   void readConfiguration();
-  void addAppliance(String name, bool isDigital, uint8_t pin, int value = 0);
+  void addAppliance(String name, String category, bool isDigital, uint8_t pin,
+                    int value = 0);
   void deleteAppliance(uint8_t pin, bool permanent = false);
+  void restoreAppliance(uint8_t pin);
 
   /**
    * @brief Delete all appliances
@@ -141,7 +144,8 @@ class HomeApplianceConfiguration {
   void reset();
   std::vector<HomeAppliance*> getAppliances();
   HomeAppliance* getAppliance(uint8_t pin);
-  void updateAppliance(uint8_t pin, String name, int value, bool isDigital);
+  void updateAppliance(uint8_t pin, String name, String category, int value,
+                       bool isDigital);
   void updateApplianceValue(uint8_t pin, int value);
   void saveConfiguration();
   unsigned int printConfiguration();

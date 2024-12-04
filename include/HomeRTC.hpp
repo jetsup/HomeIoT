@@ -27,4 +27,11 @@ class HomeRTC {
   unsigned long getEpoch();
   String getDayOfTheWeek();
   float getTemperature();
+  bool setAlarm1(DateTime &alarmTime, Ds3231Alarm1Mode alarmMode);
+  DateTime getAlarm1();
+  bool setAlarm2(DateTime &alarmTime, Ds3231Alarm2Mode alarmMode);
+  DateTime getAlarm2();
+  void clearAlarm(uint8_t alarmNum);
+  void disableAlarm(uint8_t alarmNum);
+  bool alarmFired(uint8_t alarmNum);
 };

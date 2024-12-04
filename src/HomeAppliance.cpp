@@ -1,6 +1,7 @@
 #include <HomeAppliance.hpp>
 
 const char *CONFIG_APPLIANCE_NAME = "name";
+const char *CONFIG_APPLIANCE_CATEGORY = "category";
 const char *CONFIG_APPLIANCE_IS_DIGITAL = "is_digital";
 const char *CONFIG_APPLIANCE_PIN = "pin";
 const char *CONFIG_APPLIANCE_OLD_PIN = "old_pin";
@@ -108,11 +109,13 @@ void HomeApplianceConfiguration::readConfiguration() {
   }
 }
 
-void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
-                                              uint8_t pin, int value) {
+void HomeApplianceConfiguration::addAppliance(String name, String category,
+                                              bool isDigital, uint8_t pin,
+                                              int value) {
   // JsonObject appliance = _config->createNestedObject("appliance");
   JsonObject appliance = _config->createNestedObject();
   appliance[CONFIG_APPLIANCE_NAME] = name;
+  appliance[CONFIG_APPLIANCE_CATEGORY] = category;
   appliance[CONFIG_APPLIANCE_IS_DIGITAL] = isDigital;
   appliance[CONFIG_APPLIANCE_PIN] = pin;
   appliance[CONFIG_APPLIANCE_VALUE] = value;
@@ -135,6 +138,13 @@ void HomeApplianceConfiguration::addAppliance(String name, bool isDigital,
 void HomeApplianceConfiguration::deleteAppliance(uint8_t pin, bool permanent) {
   JsonArray appliances = _config->as<JsonArray>();
 
+  // turn off the appliance first
+  for (HomeAppliance *app : *_appliances) {
+    if (app->getPin() == pin) {
+      app->setValue(0);
+    }
+  }
+
   for (int i = 0; i < appliances.size(); i++) {
     if (permanent) {
       if (appliances[i][CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
@@ -147,6 +157,7 @@ void HomeApplianceConfiguration::deleteAppliance(uint8_t pin, bool permanent) {
       if (appliances[i][CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
           !appliances[i][CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
         appliances[i][CONFIG_APPLIANCE_IS_DELETED] = 1;
+        appliances[i][CONFIG_APPLIANCE_VALUE] = 0;
         saveConfiguration();
         return;
       }
@@ -156,7 +167,27 @@ void HomeApplianceConfiguration::deleteAppliance(uint8_t pin, bool permanent) {
   DEBUG_PRINTLN("Appliance not found");
 }
 
+void HomeApplianceConfiguration::restoreAppliance(uint8_t pin) {
+  JsonArray appliances = _config->as<JsonArray>();
+
+  for (int i = 0; i < appliances.size(); i++) {
+    if (appliances[i][CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin &&
+        appliances[i][CONFIG_APPLIANCE_IS_DELETED].as<bool>()) {
+      appliances[i][CONFIG_APPLIANCE_IS_DELETED] = 0;
+      saveConfiguration();
+      return;
+    }
+  }
+
+  DEBUG_PRINTLN("Appliance not found");
+}
+
 void HomeApplianceConfiguration::reset() {
+  // turnoff all appliances first
+  for (HomeAppliance *app : *_appliances) {
+    app->setValue(0);
+  }
+
   // delete the config json file and recreate it
   if (LittleFS.exists(HOME_APPLIANCES_FILE)) {
     LittleFS.remove(HOME_APPLIANCES_FILE);
@@ -227,12 +258,14 @@ void HomeApplianceConfiguration::updateApplianceValue(uint8_t pin, int value) {
 }
 
 void HomeApplianceConfiguration::updateAppliance(uint8_t pin, String name,
-                                                 int value, bool isDigital) {
+                                                 String category, int value,
+                                                 bool isDigital) {
   JsonArray appliances = _config->as<JsonArray>();
 
   for (JsonObject appliance : appliances) {
     if (appliance[CONFIG_APPLIANCE_PIN].as<uint8_t>() == pin) {
       appliance[CONFIG_APPLIANCE_NAME] = name;
+      appliance[CONFIG_APPLIANCE_CATEGORY] = category;
       appliance[CONFIG_APPLIANCE_VALUE] = value;
       appliance[CONFIG_APPLIANCE_IS_DIGITAL] = isDigital;
       saveConfiguration();

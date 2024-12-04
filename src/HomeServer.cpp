@@ -63,6 +63,8 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
       HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
       [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
              size_t index, size_t total) {
+        DEBUG_PRINTLN("Reseting the system...");
+
         ArduinoJson::JsonDocument doc;
         ArduinoJson::DeserializationError error =
             deserializeJson(doc, data, len);
@@ -77,8 +79,8 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
         if (doc.containsKey(CONFIG_APPLIANCE_RESET)) {
           _config->reset();
 
-          DEBUG_PRINTLN("All Appliances Deleted");
-          request->send(200, "application/json", "All Appliances Deleted");
+          request->send(200, "application/json", "System Reset Successful");
+          DEBUG_PRINTLN("System reset successful...");
         } else {
           request->send(400, "application/json", "Invalid JSON");
         }
@@ -108,7 +110,7 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           if (appliance == nullptr) {
             request->send(400, "application/json",
                           "The appliance does not exist");
-            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+            DEBUG_PRINTF("Appliance with pin [%d] does not exist...\n", pin);
             return;
           }
 
@@ -146,6 +148,7 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
             doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL) &&
             doc.containsKey(CONFIG_APPLIANCE_PIN)) {
           String name = doc[CONFIG_APPLIANCE_NAME];
+          String category = doc[CONFIG_APPLIANCE_CATEGORY];
           bool isDigital = doc[CONFIG_APPLIANCE_IS_DIGITAL];
           uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
 
@@ -155,8 +158,9 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
             return;
           }
 
-          _config->addAppliance(name, isDigital, pin);
+          _config->addAppliance(name, category, isDigital, pin);
           request->send(200, "application/json", "Device added");
+          DEBUG_PRINTF("%s connected to pin [%d]...\n", name, pin);
         } else {
           request->send(400, "application/json", "Invalid JSON");
         }
@@ -191,7 +195,7 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           if (appliance == nullptr) {
             request->send(400, "application/json",
                           "The appliance does not exist");
-            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+            DEBUG_PRINTF("Appliance with pin [%d] does not exist...\n", pin);
             return;
           }
 
@@ -225,6 +229,7 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
              doc.containsKey(CONFIG_APPLIANCE_IS_DIGITAL))) {
           uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
           String name = doc[CONFIG_APPLIANCE_NAME];
+          String category = doc[CONFIG_APPLIANCE_CATEGORY];
           int value = doc[CONFIG_APPLIANCE_VALUE];
           bool isDigital = doc[CONFIG_APPLIANCE_IS_DIGITAL];
           HomeAppliance *appliance = _config->getAppliance(pin);
@@ -232,11 +237,11 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
           if (appliance == nullptr) {
             request->send(400, "application/json",
                           "The appliance does not exist");
-            DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+            DEBUG_PRINTF("Appliance with pin [%d] does not exist...\n", pin);
             return;
           }
 
-          _config->updateAppliance(pin, name, value, isDigital);
+          _config->updateAppliance(pin, name, category, value, isDigital);
 
           request->send(200, "application/json", "Appliance Updated");
         } else {
@@ -276,13 +281,43 @@ HomeServer::HomeServer(uint16_t port, HomeDHT *dht, HomeRTC *rtc,
             if (appliance == nullptr) {
               request->send(400, "application/json",
                             "The appliance does not exist");
-              DEBUG_PRINTF("Appliance with pin [%d] does not exist...", pin);
+              DEBUG_PRINTF("Appliance with pin [%d] does not exist...\n", pin);
               return;
             }
           }
 
           _config->deleteAppliance(pin, deletePermanent);
           request->send(200, "application/json", "Appliance Deleted");
+        } else {
+          DEBUG_PRINTLN("There is no appliance with that pin");
+          request->send(400, "application/json", "Invalid JSON");
+        }
+      });
+
+  // post request to restore an appliance
+  on(
+      String(String(HOME_SERVER_API_PATH) + "/device/restore/").c_str(),
+      HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index, size_t total) {
+        ArduinoJson::JsonDocument doc;
+        ArduinoJson::DeserializationError error =
+            deserializeJson(doc, data, len);
+
+        DEBUG_PRINTF("Received JSON: ['%d']'%s'\n", len, data);
+
+        if (error) {
+          DEBUG_PRINTLN("Failed to deserialize JSON");
+          request->send(400, "application/json", "Invalid JSON Received");
+          return;
+        }
+
+        if (doc.containsKey(CONFIG_APPLIANCE_PIN)) {
+          uint8_t pin = doc[CONFIG_APPLIANCE_PIN];
+
+          _config->restoreAppliance(pin);
+          request->send(200, "application/json", "Appliance Restored");
+          DEBUG_PRINTF("Appliance with pin [%d] restored...\n", pin);
         } else {
           DEBUG_PRINTLN("There is no appliance with that pin");
           request->send(400, "application/json", "Invalid JSON");
