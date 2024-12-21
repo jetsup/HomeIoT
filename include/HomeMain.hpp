@@ -7,6 +7,7 @@
 #include <HomeConfig.hpp>
 #include <HomeDHT.hpp>
 #include <HomeDisplay.hpp>
+#include <HomeMinorSensors.hpp>
 #include <HomeNetworking.hpp>
 #include <HomeRTC.hpp>
 #include <HomeServer.hpp>
@@ -21,6 +22,13 @@ extern HomeDisplay *display;
 extern HomeServer *server;
 extern HomeApplianceConfiguration *applianceConfig;
 extern std::vector<HomeAppliance *> appliances;
+
+#ifdef HOME_HAS_IR_RECEIVER
+extern HomeIRReceiver *irReceiver;
+#endif  // HOME_HAS_IR_RECEIVER
+#ifdef HOME_HAS_IR_SENDER
+extern HomeIRSender *irSender;
+#endif  // HOME_HAS_IR_SENDER
 
 extern bool SET_DATE_TIME;
 
@@ -43,4 +51,4 @@ void monitorTaskLooper(void *parameter);
  * present
  * @param formatFS boolean flag to format the file system during initialization
  */
-void initFileSystem(bool formatFS=false);
+void initFileSystem(bool formatFS = false);

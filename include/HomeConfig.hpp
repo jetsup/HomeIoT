@@ -17,6 +17,13 @@
 #define HOME_NTP_TIME_OFFSET 3 * 3600   // 3 hours
 #define HOME_NTP_UPDATE_INTERVAL 10000  // 10s
 
+// IR
+#define HOME_CONFIGURE_IR true
+#define HOME_HAS_IR_RECEIVER true  // requires HOME_CONFIGURE_IR to be true
+#define HOME_HAS_IR_SENDER true    // requires HOME_CONFIGURE_IR to be true
+#define HOME_IR_RECEIVER_PIN 14
+#define HOME_IR_SENDER_PIN 12
+
 // Display (OLED)
 #define HOME_SCREEN_ADDRESS 0x3C
 #define HOME_SCREEN_WIDTH 128

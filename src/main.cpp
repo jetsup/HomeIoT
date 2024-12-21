@@ -11,6 +11,13 @@ HomeServer *server;
 HomeApplianceConfiguration *applianceConfig;
 std::vector<HomeAppliance *> appliances;
 
+#ifdef HOME_HAS_IR_RECEIVER
+HomeIRReceiver *irReceiver;
+#endif  // HOME_HAS_IR_RECEIVER
+#ifdef HOME_HAS_IR_SENDER
+HomeIRSender *irSender;
+#endif  // HOME_HAS_IR_SENDER
+
 bool SET_DATE_TIME = false;
 bool FORMAT_FILE_SYSTEM = false;
 
@@ -23,6 +30,13 @@ void setup() {
   Wire.begin(I2C_SDA, I2C_SCL);
 
   rtc = new HomeRTC();
+
+#ifdef HOME_HAS_IR_RECEIVER
+  irReceiver = new HomeIRReceiver(HOME_IR_RECEIVER_PIN);
+#endif  // HOME_HAS_IR_RECEIVER
+#ifdef HOME_HAS_IR_SENDER
+  irSender = new HomeIRSender(HOME_IR_SENDER_PIN);
+#endif  // HOME_HAS_IR_SENDER
 
   display = new HomeDisplay(&Wire);
   display->begin();
