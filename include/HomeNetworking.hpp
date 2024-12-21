@@ -16,13 +16,13 @@ class HomeNetworking {
   String _ssid;
   String _password;
   String _hostname = HOME_DEVICE_DNS_NAME;
-  HomeNetworking() = delete;
   // NTP
   WiFiUDP _ntpUDP;
   NTPClient _ntpClient = NTPClient(_ntpUDP, HOME_NTP_TIME_OFFSET);
   bool _ntpConnected = false;
 
  public:
+  HomeNetworking() = delete;
   HomeNetworking(String ssid = HOME_WIFI_SSID,
                  String password = HOME_WIFI_PASSWORD);
   void connect();

@@ -47,16 +47,25 @@ This project is a simple home automation system with a lot of flexibility. The s
 
 ## Future features
 
--   **Android app for adding new devices**
+-   [x] **Android app for adding new devices**
 
     -   An [Android app](https://github.com/jetsup/Home-IoT-Android.git) that can be used to add new devices to the system. The app will then send a post request to the system with the device information.
 
--   **Rate limiting**
+-   [ ] **Rate limiting**
 
     -   Rate limiting for the system to prevent spamming and possible DOS attacks.
 
--   **Voice control**
-    -   Voice control for the system. This will be done using Google Assistant or Alexa.
+-   [ ] **Voice control**
+
+-   Voice control for the system. This will be done using Google Assistant or Alexa.
+
+-   [ ] **Lightings**
+
+    -   Smoothly turn lights on and off.
+
+-   [ ] **WiFi Manager**
+
+    -   A WiFi manager that can be used to change the WiFi network the system is connected to.
 
 ## Installation
 
